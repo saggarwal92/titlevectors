@@ -4,11 +4,12 @@ class Configs:
     __EMBEDDING_MODEL_NAME: str
     __SKILLS_COLLECTION_NAME: str
     __RESPONSIBILITIES_COLLECTION_NAME: str
+    __hf_token: str = "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"
 
     def __init__(self):
         self.__SKILLS_COLLECTION_NAME = "desc_skills"
         self.__RESPONSIBILITIES_COLLECTION_NAME = "desc_res"
-        self.__EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+        self.__EMBEDDING_MODEL_NAME = "google/embeddinggemma-300m" # sentence-transformers/all-MiniLM-L6-v2
         self.__load_dev_config()
 
     def __load_dev_config(self):
@@ -22,6 +23,9 @@ class Configs:
     
     def get_embedding_model_name(self):
         return self.__EMBEDDING_MODEL_NAME
+
+    def get_hugging_face_token(self):
+        return self.__hf_token
     
     def get_skills_collection_name(self):
         return self.__SKILLS_COLLECTION_NAME

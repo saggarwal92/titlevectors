@@ -11,7 +11,7 @@ class VectorSearchService:
 
     def __init__(self):
         self.__q_client = QdrantClient(configs.get_qdrant_url())
-        self.__vectorizer = Vectorizer(configs.get_embedding_model_name())
+        self.__vectorizer = Vectorizer.get_instance()
 
     def search_items(self, document: SearchableJobDocument):
         skill_suggestions = self.__get_skill_based_suggestions(document)
@@ -31,7 +31,8 @@ class VectorSearchService:
             collection_name=configs.get_skills_collection_name(),
             vectorizer= self.__vectorizer,
             query_text=skills_text,
-            top_k=5
+            top_k=5,
+            score_threshold=0.85
         )
         skill_suggestions = [SearchResult(res) for res in results]
         return skill_suggestions
@@ -43,7 +44,8 @@ class VectorSearchService:
             collection_name=configs.get_responsibilities_collection_name(),
             vectorizer= self.__vectorizer,
             query_text=responsibilities_text,
-            top_k=5
+            top_k=5,
+            score_threshold=0.85
         )
         responsibility_suggestions = [SearchResult(res) for res in results]
         return responsibility_suggestions

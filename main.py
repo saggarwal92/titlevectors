@@ -33,9 +33,9 @@ async def health_check():
 
 @app.on_event("startup")
 async def startup_event():
-    logging.info("Creating collections if they do not exist...")
+    logging.error(f"Creating collections if they do not exist...: {configs.get_qdrant_url()}")
     client = QdrantClient(configs.get_qdrant_url())
-    vectorizer = Vectorizer(configs.get_embedding_model_name())
+    vectorizer = Vectorizer.get_instance()
     create_collection_if_not_exists(
         client = client,
         vectorizer = vectorizer,

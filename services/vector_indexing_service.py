@@ -10,7 +10,7 @@ class VectorIndexingService:
 
     def __init__(self):
         self.__q_client = QdrantClient(configs.get_qdrant_url())
-        self.__vectorizer = Vectorizer(configs.get_embedding_model_name())
+        self.__vectorizer = Vectorizer.get_instance()
 
     def insert_documents(self, documents: list[IndexableJobDocument]):
         skill_vector_items = [self.__to_skills_vector_item(doc) for doc in documents]
