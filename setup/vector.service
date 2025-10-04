@@ -1,0 +1,13 @@
+[Unit]
+Description=FastAPI TitleVectors Service
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/titlevectors
+EnvironmentFile=/etc/environment
+ExecStart=/root/titlevectors/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

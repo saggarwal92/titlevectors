@@ -15,12 +15,7 @@ class Vectorizer:
     def __init__(self):
         if not self._initialized:
             model_name = configs.get_embedding_model_name()
-            hf_token = configs.get_hugging_face_token()
-            self.model = SentenceTransformer(
-                model_name,
-                trust_remote_code=True,
-                use_auth_token=hf_token
-            )
+            self.model = SentenceTransformer(model_name)
             self._initialized = True
 
     def get_vector_config(self):
