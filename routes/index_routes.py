@@ -1,4 +1,3 @@
-import json
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from services.vector_search_service import VectorSearchService
@@ -17,16 +16,20 @@ async def indexing_api(request: Request):
     jobs = json_data['jobs']
     documents = []
     for job in jobs:
-        documents.append(IndexableJobDocument(
-            job_id=job["job_id"],
-            company_slug=job["company_slug"],
-            llm_primary_title=job["llm_primary_title"],
-            llm_secondary_title=job["llm_secondary_title"],
-            short_description=job["short_description"],
-            llm_responsibilities=job["llm_responsibilities"],
-            llm_skills=job["llm_skills"],
-            selected_titles=job["selected_titles"]
-        ))
+        documents.append(
+            IndexableJobDocument(
+                job_id=job["job_id"],
+                company_slug=job["company_slug"],
+                llm_primary_title=job["llm_primary_title"],
+                llm_secondary_title=job["llm_secondary_title"],
+                short_description=job["short_description"],
+                llm_responsibilities=job["llm_responsibilities"],
+                llm_skills=job["llm_skills"],
+                selected_titles=job["selected_titles"],
+                hop_level=job["hop_level"],
+                source=job["source"]
+            )
+        )
     vector_indexing_service.insert_documents(documents)
     return JSONResponse(content={"success": True})
 

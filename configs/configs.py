@@ -9,7 +9,7 @@ class Configs:
     def __init__(self):
         self.__SKILLS_COLLECTION_NAME = "desc_skills"
         self.__RESPONSIBILITIES_COLLECTION_NAME = "desc_res"
-        self.__EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2" # 
+        self.__EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L12-v2" # 
         self.__load_dev_config()
 
     def __load_dev_config(self):

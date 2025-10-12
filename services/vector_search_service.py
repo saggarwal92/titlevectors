@@ -32,7 +32,7 @@ class VectorSearchService:
             vectorizer= self.__vectorizer,
             query_text=skills_text,
             top_k=5,
-            score_threshold=0.85
+            score_threshold=0.8
         )
         skill_suggestions = [SearchResult(res) for res in results]
         return skill_suggestions
@@ -45,7 +45,7 @@ class VectorSearchService:
             vectorizer= self.__vectorizer,
             query_text=responsibilities_text,
             top_k=5,
-            score_threshold=0.85
+            score_threshold=0.8
         )
         responsibility_suggestions = [SearchResult(res) for res in results]
         return responsibility_suggestions
@@ -58,36 +58,68 @@ class VectorSearchService:
         merged_suggestions = []
         for title in skill_suggestions:
             if title in responsibility_suggestions:
-                confidence_score = skill_suggestions[title]['score'] + responsibility_suggestions[title]['score']
+                skill_entry = skill_suggestions[title]
+                res_entry = responsibility_suggestions[title]
+
+                confidence_score = skill_entry['adjusted_score'] + res_entry['adjusted_score']
+                # union job match ids.
                 match_job_ids = list(
-                    skill_suggestions[title]['match_job_ids'].union(
-                        responsibility_suggestions[title]['match_job_ids'])
+                    skill_entry['match_job_ids'].union(res_entry['match_job_ids'])
                 )
+
                 merged_suggestions.append({
                     'suggestion_source': 'both',
                     'title': title,
                     'score': confidence_score,
-                    'match_job_ids': match_job_ids
+                    'match_job_ids': match_job_ids,
+                    'skill_sources': skill_entry['sources'],
+                    'res_sources': res_entry['sources'],
+                    'skill_origins_count': skill_entry['origins_count'],
+                    'res_origins_count': res_entry['origins_count'],
+                    'min_hop': min(skill_entry['min_hop'], res_entry['min_hop']),
+                    'max_hop': max(skill_entry['min_hop'], res_entry['min_hop']),
                 })
         return merged_suggestions
-    
+
+
     def __extract_unique_suggestions(self, results: list[SearchResult]) -> dict:
         if len(results) == 0:
             return {}
-        results = sorted(results, key=lambda x: x.score, reverse=True)
+        
+        results = sorted(results, key=lambda x: x._adjusted_score(), reverse=True)
+        SCORE_REDUCTION_FACTOR = 0.5
+        CLOSENESS_ABS_DELTA = 0.05
 
         unique_suggestions = {}
         for match_result in results:
-            for title in match_result.titles:
+            for title in set(match_result.titles): # only loop once per title in match_result
                 if title in unique_suggestions:
-                    continue
-                unique_suggestions[title] = {
-                    # reduce score since it's from one index only
-                    'score': match_result.score * 0.5,
-                    'match_job_ids': {match_result.job_id}
-                }
+                    entry = unique_suggestions[title]
+                    entry['match_job_ids'].add(match_result.job_id)
+                    entry['sources'].add(match_result.source)
+                    entry['origins_count'] += 1
+                    # if new result has lower hop level, and score is close enough to original score, then only update min_hop
+                    if match_result.hop_level < entry['min_hop']:
+                        if abs(match_result.score - entry['original_score']) <= CLOSENESS_ABS_DELTA:
+                            entry['min_hop'] = match_result.hop_level
+                            entry['original_score'] = match_result.score
+                    # This not really required but a safety check if results are not sorted properly.
+                    new_score = match_result._adjusted_score() * SCORE_REDUCTION_FACTOR
+                    entry['adjusted_score'] = max(entry['adjusted_score'], new_score)
+                else:
+                    unique_suggestions[title] = {
+                        # reduce score since it's from one index only
+                        'adjusted_score': match_result._adjusted_score() * SCORE_REDUCTION_FACTOR,
+                        'original_score': match_result.score,
+                        'match_job_ids' : {match_result.job_id},
+                        'hop_level'     : match_result.hop_level,
+                        'min_hop'       : match_result.hop_level,
+                        'sources'       : {match_result.source},
+                        'origins_count' : 1
+                    }
 
         return unique_suggestions
+
 
 """
 def __extract_only_repeated_suggestions(results: list[dict], suggestion_source: str) -> list[dict]:
